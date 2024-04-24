@@ -12,7 +12,8 @@ contract Elegy2 {
 
     function play(uint nonce) external {
         totalSum = 0;
-        for(uint i = 0; i < lines.length; i++) {
+        uint linesLength = lines.length;
+        for(uint i = 0; i < linesLength; i++) {
             totalSum += (i * nonce) * lines[i];
         }
     }

@@ -3,9 +3,9 @@ pragma solidity ^0.8.19;
 
 contract Elegy1 {
 
-    bytes8 public firstVerse;
     bytes32 public secondVerse;
     address public thirdVerse;
+    bytes8 public firstVerse;
     uint128 public fourthVerse;
     uint96 public fifthVerse;
 
