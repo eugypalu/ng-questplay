@@ -1,0 +1,16 @@
+[
+    {
+        "numMembers": 5,
+        "withdrawRequests": [
+            {
+                "requesterId": 1,
+                "withdrawalId": 2
+            },
+            {
+                "requesterId": 1,
+                "withdrawalId": 3
+            } 
+        ],
+        "approvedRequestId": 0
+    }
+]
