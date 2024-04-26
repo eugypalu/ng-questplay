@@ -11,7 +11,19 @@ contract MemoryLayout {
         uint256 value
     ) public pure returns (uint256[] memory array) {
         assembly {
+            let memoryAddress := mload(0x40)
 
+            mstore(memoryAddress, size)
+            
+            array := memoryAddress
+
+            memoryAddress := add(memoryAddress, 0x20)
+
+            for { let i := 0 } lt(i, size) { i := add(i, 1) } {
+                mstore(memoryAddress, value)
+            }
+
+            mstore(0x40, memoryAddress)
         }
     }
 
@@ -23,7 +35,20 @@ contract MemoryLayout {
         bytes1 value
     ) public pure returns (bytes memory array) {
         assembly {
-            
+            let memoryAddress := mload(0x40)
+
+            mstore(memoryAddress, size)
+
+            array := memoryAddress
+
+            memoryAddress := add(memoryAddress, 0x20)
+
+            for { let i := 0 } lt(i,size) { i := add(i,1) } {
+                mstore(memoryAddress, value)
+                memoryAddress := add(memoryAddress, 1)
+            }
+
+              mstore(0x40, memoryAddress)
         }
     }
 }

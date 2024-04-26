@@ -11,7 +11,33 @@ contract DynamicArray {
         uint256 value
     ) public pure returns (uint256[] memory array_) {
         assembly {
+            let freeIndex := mload(0x40)
 
+            let arrayLength := mload(array)
+
+            let arrayIndex := add(array, 0x20)
+
+            let newArrayLength := add(arrayLength, 1)
+
+            array_ := freeIndex
+
+            mstore(array_, newArrayLength)
+
+            freeIndex := add(freeIndex, 0x20)
+
+            for {let i := 0} lt(i, arrayLength) {i := add(i,1)} {
+                
+                mstore(freeIndex,mload(arrayIndex))
+
+                freeIndex := add(freeIndex, 0x20)
+
+                arrayIndex := add(arrayIndex, 0x20)
+
+            }
+
+            mstore(freeIndex, value)
+
+            mstore(0x40, add(freeIndex, 0x20))
         }
     }
 
@@ -23,7 +49,13 @@ contract DynamicArray {
         returns (uint256[] memory array_) 
     {
         assembly {
+            let arrayLength := mload(array)
+                        
+            if lt(arrayLength,1) { revert (0,0)}
 
+            mstore(array, sub(arrayLength,1))
+
+            array_ := array
         }
     }
 
@@ -34,8 +66,26 @@ contract DynamicArray {
         pure 
         returns (uint256[] memory array_) 
     {
+
         assembly {
-            
+            let arrayLength := mload(array)
+
+            if or(lt(index, 0),gt(index, sub(arrayLength,1))) { revert(0,0)}
+
+            let arrayIndex := add(add(array,0x20), mul(0x20, index))
+
+            let newArrayLength := sub(arrayLength, 1)
+
+            array_ := array
+
+            mstore(array_, newArrayLength)
+
+            for {let i := 0} lt(i, sub(arrayLength, index)) {i := add(i,1)} {
+                
+                mstore(arrayIndex,mload(add(arrayIndex,0x20)))
+
+                arrayIndex := add(arrayIndex, 0x20)
+            }            
         }
     }
 
