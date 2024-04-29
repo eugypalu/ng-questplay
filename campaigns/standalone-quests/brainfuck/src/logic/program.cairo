@@ -1,4 +1,4 @@
-use brainfuck::logic::utils::{
+use src::logic::utils::{
     iter, incr_ptr, decr_ptr, incr_mem, decr_mem, match_closing, match_opening, preprocess
 };
 use bytes_31::{

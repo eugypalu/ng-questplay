@@ -16,7 +16,7 @@ mod BrainfuckVM {
     use core::array::ArrayTrait;
     use super::IBrainfuckVM;
 
-    use brainfuck::logic::program::{ProgramTrait, ProgramTraitImpl};
+    use src::logic::program::{ProgramTrait, ProgramTraitImpl};
 
     #[external(v0)]
     impl BrainfuckVMImpl of super::IBrainfuckVM<ContractState> {
