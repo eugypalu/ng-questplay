@@ -1,74 +1,70 @@
-from src.logic.utils import iter, incr_ptr, decr_ptr, incr_mem, decr_mem, match_closing, match_opening, preprocess
-from bytes_31 import split_bytes31, bytes31_try_from_felt252, BYTES_IN_U128, POW_2_8, one_shift_left_bytes_u128, BYTES_IN_BYTES31
-from traits import Into, DivRem
+use src::logic::utils::*;
+use bytes_31::*;
+use traits::*;
 
-struct ProgramTrait:
-    member check: func(self: ProgramTrait*, self_content: felt*)
-    member execute: func(self: ProgramTrait*, self_content: felt*, input: felt*) -> (output: felt*)
+trait ProgramTrait {
+    fn check(&self);
+    fn execute(&self, input: Vec<u8>) -> Vec<u8>;
+}
 
-func ProgramTrait__check(self: ProgramTrait*, self_content: felt*):
-    let balance = 0
-    let len = 0
-    let str = 0
-    let strs = self_content
+impl ProgramTrait for &[felt252] {
+    fn check(&self) {
+        let mut balance = 0;
+        let mut len = 0;
+        let mut str = 0;
+        let strs = self;
 
-    loop:
-        let maybe_char = iter(len, str, strs)
-        if maybe_char == 0:
-            assert balance == 0
-            return ()
-        end
+        while let Some(char) = iter(&mut len, &mut str, &strs) {
+            if char == '[' {
+                balance += 1;
+            } else if char == ']' {
+                assert!(balance != 0, "excess closing bracket");
+                balance -= 1;
+            } else if char * (char - '+') * (char - '>') * (char - '<') * (char - '-') * (char - '.') * (char - ',') != 0 {
+                panic!("unrecognized character");
+            }
+        }
+        assert!(balance == 0, "missing closing bracket");
+    }
 
-        let char = maybe_char
-        if char == '[':
-            balance += 1
-        elif char == ']':
-            assert balance != 0
-            balance -= 1
-        elif char * (char - '+') * (char - '>') * (char - '<') * (char - '-') * (char - '.') * (char - ',') != 0:
-            panic()
-        end
-    end
+    fn execute(&self, input: Vec<u8>) -> Vec<u8> {
+        let processedInstructions = preprocess(self);
+        let mut dataMemory: HashMap<felt252, u8> = HashMap::new();
+        let mut inputData = input.into_iter();
+        let mut outputData = Vec::new();
+        let mut dataPointer = 0;
+        let mut programCounter = 0;
 
-func ProgramTrait__execute(self: ProgramTrait*, self_content: felt*, input: felt*) -> (output: felt*):
-    let processedInstructions = preprocess(self_content)
-    let instructionCount = len(processedInstructions)
-    let dataMemory: DictAccess* = alloc()
-    let inputDataSpan = input
-    let outputData: felt* = alloc()
-    let dataPointer = 0
-    let programCounter = 0
-
-    loop:
-        let maybe_instruction = processedInstructions[programCounter]
-        if maybe_instruction == 0:
-            return (outputData)
-        end
-
-        let currentInstruction = maybe_instruction
-        if currentInstruction == '>':
-            incr_ptr(dataPointer)
-        elif currentInstruction == '<':
-            decr_ptr(dataPointer)
-        elif currentInstruction == '+':
-            incr_mem(dataMemory, dataPointer)
-        elif currentInstruction == '-':
-            decr_mem(dataMemory, dataPointer)
-        elif currentInstruction == '.':
-            outputData = dataMemory[dataPointer]
-        elif currentInstruction == ',':
-            dataMemory[dataPointer] = inputDataSpan[0]
-            inputDataSpan += 1
-        elif currentInstruction == '[':
-            if dataMemory[dataPointer] == 0:
-                match_closing(programCounter, processedInstructions)
-            end
-        elif currentInstruction == ']':
-            if dataMemory[dataPointer] != 0:
-                match_opening(programCounter, processedInstructions)
-            end
-        end
-
-        programCounter += 1
-    end
-end
+        while programCounter < processedInstructions.len() {
+            match processedInstructions[programCounter] {
+                '>' => incr_ptr(&mut dataPointer),
+                '<' => decr_ptr(&mut dataPointer),
+                '+' => incr_mem(&mut dataMemory, dataPointer),
+                '-' => decr_mem(&mut dataMemory, dataPointer),
+                '.' => {
+                    if let Some(&value) = dataMemory.get(&dataPointer) {
+                        outputData.push(value);
+                    }
+                },
+                ',' => {
+                    if let Some(input_byte) = inputData.next() {
+                        dataMemory.insert(dataPointer, input_byte);
+                    }
+                },
+                '[' => {
+                    if dataMemory.get(&dataPointer).copied().unwrap_or(0) == 0 {
+                        match_closing(&mut programCounter, &processedInstructions);
+                    }
+                },
+                ']' => {
+                    if dataMemory.get(&dataPointer).copied().unwrap_or(0) != 0 {
+                        match_opening(&mut programCounter, &processedInstructions);
+                    }
+                },
+                _ => {},
+            }
+            programCounter += 1;
+        }
+        outputData
+    }
+}
