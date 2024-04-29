@@ -1,8 +1,3 @@
-mod logic {
-    mod program;
-    mod utils;
-}
-
 #[starknet::interface]
 trait IBrainfuckVM<TContractState> {
     fn deploy(ref self: TContractState, programData: Array<felt252>) -> u128;
