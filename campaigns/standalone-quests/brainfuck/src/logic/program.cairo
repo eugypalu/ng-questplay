@@ -14,33 +14,32 @@ trait ProgramTrait {
 
 impl ProgramTraitImpl of ProgramTrait {
     fn check(self: @Array<felt252>) {
-        let mut balance: felt252 = 0;
-        let (mut len, mut str, mut strs) = (0, 0, self.span());
-
+        let mut brackets_balance: felt252 = 0;
+        let (mut _str_len, mut _str, mut _strs) = (0, 0, self.span());
         loop {
-            match iter(ref len, ref str, ref strs) {
-                Option::Some(char) => {
-                    if char == '[' {
-                        balance += 1;
+            match iter(ref _str_len, ref _str, ref _strs) {
+                Option::Some(c) => {
+                    if c == '[' {
+                        brackets_balance += 1;
                         continue;
                     }
-                    if char == ']' {
-                        assert(balance != 0, 'excess closing bracket');
-                        balance -= 1;
+                    if c == ']' {
+                        assert(brackets_balance != 0, 'too many closing bracket');
+                        brackets_balance -= 1;
                         continue;
                     }
-                    if char
-                        * (char - '+')
-                        * (char - '>')
-                        * (char - '<')
-                        * (char - '-')
-                        * (char - '.')
-                        * (char - ',') != 0 {
-                        panic_with_felt252('unrecognized character');
+                    if c
+                        * (c - '+')
+                        * (c - '>')
+                        * (c - '<')
+                        * (c - '-')
+                        * (c - '.')
+                        * (c - ',') != 0 {
+                        panic_with_felt252('invalid char');
                     }
                 },
                 Option::None => {
-                    assert(balance == 0, 'missing closing bracket');
+                    assert(brackets_balance == 0, 'missing closing bracket');
                     break;
                 }
             };
@@ -48,37 +47,41 @@ impl ProgramTraitImpl of ProgramTrait {
     }
 
     fn execute(self: @Array<felt252>, input: Array<u8>) -> Array<u8> {
-        let processedInstructions = preprocess(self.span());
-        let instructionCount = processedInstructions.len();
-        let mut dataMemory: Felt252Dict<u8> = Default::default();
-        let mut inputDataSpan = input.span();
-        let mut outputData: Array<u8> = Default::default();
-        let mut dataPointer: felt252 = 0;
-        let mut programCounter: usize = 0;
+        let instructions = preprocess(self.span());
+        let len = instructions.len();
+        let mut memory: Felt252Dict<u8> = Default::default();
+        let mut input = input.span();
+        let mut output: Array<u8> = Default::default();
+        let mut ptr: felt252 = 0;
+        let mut pc: usize = 0;
 
+        // iterator
+        let mut next_str_id = 0;
+        let mut str = 0;
+        let mut chars_left = 0;
         loop {
-            match processedInstructions.get(programCounter) {
-                Option::Some(instruction) => {
-                    let currentInstruction = *instruction.unbox();
-                    if currentInstruction == '>' {
-                        incr_ptr(ref dataPointer);
-                    } else if currentInstruction == '<' {
-                        decr_ptr(ref dataPointer);
-                    } else if currentInstruction == '+' {
-                        incr_mem(ref dataMemory, dataPointer);
-                    } else if currentInstruction == '-' {
-                        decr_mem(ref dataMemory, dataPointer);
-                    } else if currentInstruction == '.' {
-                        outputData.append(dataMemory.get(dataPointer));
-                    } else if currentInstruction == ',' {
-                        dataMemory.insert(dataPointer, *inputDataSpan.pop_front().unwrap());
-                    } else if currentInstruction == '[' {
-                        if dataMemory.get(dataPointer) == 0 {
-                            match_closing(ref programCounter, @processedInstructions);
+            match instructions.get(pc) {
+                Option::Some(char) => {
+                    let c = *char.unbox();
+                    if c == '>' {
+                        incr_ptr(ref ptr);
+                    } else if c == '<' {
+                        decr_ptr(ref ptr);
+                    } else if c == '+' {
+                        incr_mem(ref memory, ptr);
+                    } else if c == '-' {
+                        decr_mem(ref memory, ptr);
+                    } else if c == '.' {
+                        output.append(memory.get(ptr));
+                    } else if c == ',' {
+                        memory.insert(ptr, *input.pop_front().unwrap());
+                    } else if c == '[' {
+                        if memory.get(ptr) == 0 {
+                            match_closing(ref pc, @instructions);
                         };
-                    } else if currentInstruction == ']' {
-                        if dataMemory.get(dataPointer) != 0 {
-                            match_opening(ref programCounter, @processedInstructions);
+                    } else if c == ']' {
+                        if memory.get(ptr) != 0 {
+                            match_opening(ref pc, @instructions);
                         };
                     };
                 },
@@ -86,8 +89,8 @@ impl ProgramTraitImpl of ProgramTrait {
                     break;
                 }
             }
-            programCounter += 1;
+            pc += 1;
         };
-        outputData
+        output
     }
 }
