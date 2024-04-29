@@ -6,34 +6,44 @@ trait IBrainfuckVM<TContractState> {
 }
 
 #[starknet::contract]
+#[starknet::contract]
 mod BrainfuckVM {
+    use starknet::storage::{Storage, StorageMap};
+
     #[storage]
     struct Storage {
-        programs: Felt252Dict<Array<felt252>>,  # Dictionary mapping program IDs to programs.
+        program_counter: u8,
+        programs: StorageMap<u8, Array<felt252>>,
     }
 
-    impl IBrainfuckVM<Storage> of IBrainfuckVM {
-        fn deploy(ref self: Storage, program: Array<felt252>) -> u8 {
-            # Validate the program.
-            program.check()
-
-            # Get a new ID.
-            let program_id = self.programs.len()
-
-            # Store the program.
-            self.programs[program_id] = program
-
-            # Return the ID.
-            return program_id
+    #[init]
+    fn init() -> Storage {
+        Storage {
+            program_counter: 0,
+            programs: StorageMap::new(),
         }
+    }
 
-        fn get_program(self: @Storage, program_id: u8) -> Array<felt252> {
-            return self.programs[program_id]
-        }
+    #[external]
+    fn deploy(ref mut self: Storage, program: Array<felt252>) -> u8 {
+        // TODO: Add syntax validation for the program here.
 
-        fn call(self: @Storage, program_id: u8, input: Array<u8>) -> Array<u8> {
-            let program = self.programs[program_id]
-            return program.execute(input)
-        }
+        let program_id = self.program_counter;
+        self.programs.insert(program_id, program);
+        self.program_counter += 1;
+
+        program_id
+    }
+
+    #[view]
+    fn get_program(self: &Storage, program_id: u8) -> Array<felt252> {
+        self.programs.get(program_id).unwrap()
+    }
+
+    #[external]
+    fn call(self: &Storage, program_id: u8, input: Array<u8>) -> Array<u8> {
+        // TODO: Add code to execute the program here.
+
+        Array::new() // Placeholder return value.
     }
 }
