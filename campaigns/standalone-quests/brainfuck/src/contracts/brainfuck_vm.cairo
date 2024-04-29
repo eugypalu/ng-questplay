@@ -1,38 +1,51 @@
+# Import necessary modules
+from starkware.cairo.common.dict import Dict
+from starkware.cairo.common.uint256 import Uint256
+from starkware.cairo.common.alloc import alloc_dict
+
+# Define an interface for the contract
 #[starknet::interface]
-trait IBrainfuckVM<TContractState> {
-    fn deploy(ref self: TContractState, program: Array<felt252>) -> u8;
-    fn get_program(self: @TContractState, program_id: u8) -> Array<felt252>;
-    fn call(self: @TContractState, program_id: u8, input: Array<u8>) -> Array<u8>;
+trait IBrainfuckVM {
+    fn deploy(ref self: Storage, program: Array<felt252>) -> u8;
+    fn get_program(self: @Storage, program_id: u8) -> Array<felt252>;
+    fn call(self: @Storage, program_id: u8, input: Array<u8>) -> Array<u8>;
 }
 
 #[starknet::contract]
 mod BrainfuckVM {
+    # Define storage to store programs
     #[storage]
     struct Storage {
-        programs: Felt252Dict<Array<felt252>>,  # Dictionary mapping program IDs to programs.
+        programs: Dict<u8, Array<felt252>>  # Dictionary mapping IDs to programs
     }
 
-    impl IBrainfuckVM<Storage> of IBrainfuckVM {
+    impl IBrainfuckVM for Storage {
+        # Deploy function
         fn deploy(ref self: Storage, program: Array<felt252>) -> u8 {
-            # Validate the program.
+            # Validate the program
             program.check()
 
-            # Get a new ID.
-            let program_id = self.programs.len()
+            # Get a new program ID
+            let program_id: u8 = self.programs.len()
 
-            # Store the program.
-            self.programs[program_id] = program
+            # Store the program
+            self.programs.insert(program_id, program)
 
-            # Return the ID.
+            # Return the ID
             return program_id
         }
 
+        # Get program function
         fn get_program(self: @Storage, program_id: u8) -> Array<felt252> {
-            return self.programs[program_id]
+            return self.programs.get(program_id).unwrap()
         }
 
+        # Call function
         fn call(self: @Storage, program_id: u8, input: Array<u8>) -> Array<u8> {
-            let program = self.programs[program_id]
+            # Retrieve the program
+            let program = self.programs.get(program_id).unwrap()
+
+            # Execute the program and return output
             return program.execute(input)
         }
     }
