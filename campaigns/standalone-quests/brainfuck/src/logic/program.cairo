@@ -18,32 +18,26 @@ impl ProgramTraitImpl of ProgramTrait {
         let (mut len, mut str, mut strs) = (0, 0, self.span());
 
         loop {
-            match iter(ref len, ref str, ref strs) {
-                Option::Some(char) => {
-                    if char == '[' {
-                        balance += 1;
-                        continue;
-                    }
-                    if char == ']' {
-                        assert(balance != 0, 'excess closing bracket');
-                        balance -= 1;
-                        continue;
-                    }
-                    if char
-                        * (char - '+')
-                        * (char - '>')
-                        * (char - '<')
-                        * (char - '-')
-                        * (char - '.')
-                        * (char - ',') != 0 {
-                        panic_with_felt252('unrecognized character');
-                    }
-                },
-                Option::None => {
-                    assert(balance == 0, 'missing closing bracket');
-                    break;
-                }
-            };
+            let maybe_char = iter(ref len, ref str, ref strs);
+            if maybe_char == Option::None {
+                assert(balance == 0, 'missing closing bracket');
+                break;
+            }
+            let char = *maybe_char.unwrap();
+            if char == '[' {
+                balance += 1;
+            } else if char == ']' {
+                assert(balance != 0, 'excess closing bracket');
+                balance -= 1;
+            } else if char
+                * (char - '+')
+                * (char - '>')
+                * (char - '<')
+                * (char - '-')
+                * (char - '.')
+                * (char - ',') != 0 {
+                panic_with_felt252('unrecognized character');
+            }
         };
     }
 
@@ -57,35 +51,32 @@ impl ProgramTraitImpl of ProgramTrait {
         let mut programCounter: usize = 0;
 
         loop {
-            match processedInstructions.get(programCounter) {
-                Option::Some(instruction) => {
-                    let currentInstruction = *instruction.unbox();
-                    if currentInstruction == '>' {
-                        incr_ptr(ref dataPointer);
-                    } else if currentInstruction == '<' {
-                        decr_ptr(ref dataPointer);
-                    } else if currentInstruction == '+' {
-                        incr_mem(ref dataMemory, dataPointer);
-                    } else if currentInstruction == '-' {
-                        decr_mem(ref dataMemory, dataPointer);
-                    } else if currentInstruction == '.' {
-                        outputData.append(dataMemory.get(dataPointer));
-                    } else if currentInstruction == ',' {
-                        dataMemory.insert(dataPointer, *inputDataSpan.pop_front().unwrap());
-                    } else if currentInstruction == '[' {
-                        if dataMemory.get(dataPointer) == 0 {
-                            match_closing(ref programCounter, @processedInstructions);
-                        };
-                    } else if currentInstruction == ']' {
-                        if dataMemory.get(dataPointer) != 0 {
-                            match_opening(ref programCounter, @processedInstructions);
-                        };
-                    };
-                },
-                Option::None => {
-                    break;
-                }
+            let maybe_instruction = processedInstructions.get(programCounter);
+            if maybe_instruction == Option::None {
+                break;
             }
+            let currentInstruction = *maybe_instruction.unwrap().unbox();
+            if currentInstruction == '>' {
+                incr_ptr(ref dataPointer);
+            } else if currentInstruction == '<' {
+                decr_ptr(ref dataPointer);
+            } else if currentInstruction == '+' {
+                incr_mem(ref dataMemory, dataPointer);
+            } else if currentInstruction == '-' {
+                decr_mem(ref dataMemory, dataPointer);
+            } else if currentInstruction == '.' {
+                outputData.append(dataMemory.get(dataPointer));
+            } else if currentInstruction == ',' {
+                dataMemory.insert(dataPointer, *inputDataSpan.pop_front().unwrap());
+            } else if currentInstruction == '[' {
+                if dataMemory.get(dataPointer) == 0 {
+                    match_closing(ref programCounter, @processedInstructions);
+                };
+            } else if currentInstruction == ']' {
+                if dataMemory.get(dataPointer) != 0 {
+                    match_opening(ref programCounter, @processedInstructions);
+                };
+            };
             programCounter += 1;
         };
         outputData

@@ -3,7 +3,6 @@ trait IBrainfuckVM<TContractState> {
     fn deploy(ref self: TContractState, programData: Array<felt252>) -> u128;
     fn get_program(self: @TContractState, programId: u128) -> Array<felt252>;
     fn call(self: @TContractState, programId: u128, inputData: Array<u8>) -> Array<u8>;
-    fn check(self: @TContractState, programId: u128, inputData: Array<u8>);
 }
 
 #[starknet::contract]
@@ -56,10 +55,6 @@ mod BrainfuckVM {
 
         fn call(self: @ContractState, programId: u128, inputData: Array<u8>) -> Array<u8> {
             self.read_program(programId, 0).execute(inputData)
-        }
-
-        fn check(self: @ContractState, programId: u128, inputData: Array<u8>) {
-            self.read_program(programId, 0).check()
         }
     }
 }
