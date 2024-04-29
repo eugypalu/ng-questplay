@@ -23,8 +23,7 @@ impl ProgramTraitImpl of ProgramTrait {
                 assert(balance == 0, 'missing closing bracket');
                 break;
             }
-            let char = if maybe_char is None: 0
-            else: *maybe_char.unwrap()
+            let char = *maybe_char.unbox();
             if char == '[' {
                 balance += 1;
             } else if char == ']' {
