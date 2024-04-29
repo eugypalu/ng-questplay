@@ -6,7 +6,6 @@ trait IBrainfuckVM<TContractState> {
 }
 
 #[starknet::contract]
-#[starknet::contract]
 mod BrainfuckVM {
     use starknet::storage::{Storage, StorageMap};
 
