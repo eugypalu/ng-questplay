@@ -18,7 +18,6 @@ mod BrainfuckVM {
 
     use src::logic::program::{ProgramTrait, ProgramTraitImpl};
 
-    #[external(v0)]
     impl BrainfuckVMImpl of super::IBrainfuckVM<ContractState> {
         fn deploy(ref self: ContractState, mut programData: Array<felt252>) -> u128 {
             match programData.pop_front() {

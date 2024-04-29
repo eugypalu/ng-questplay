@@ -1,49 +1,70 @@
-import program
+mod logic {
+    mod program;
+    mod utils;
+}
 
 #[starknet::interface]
 trait IBrainfuckVM<TContractState> {
-    fn deploy(ref self: TContractState, program: Array<felt252>) -> u8;
-    fn get_program(self: @TContractState, program_id: u8) -> Array<felt252>;
-    fn call(self: @TContractState, program_id: u8, input: Array<u8>) -> Array<u8>;
+    fn deploy(ref self: TContractState, programData: Array<felt252>) -> u128;
+    fn get_program(self: @TContractState, programId: u128) -> Array<felt252>;
+    fn call(self: @TContractState, programId: u128, inputData: Array<u8>) -> Array<u8>;
+    fn check(self: @TContractState, programId: u128, inputData: Array<u8>);
 }
 
 #[starknet::contract]
 mod BrainfuckVM {
-    use starknet::storage::{Storage, StorageMap};
+    use core::array::ArrayTrait;
+    use super::IBrainfuckVM;
 
-    #[storage]
-    struct Storage {
-        program_counter: u8,
-        programs: StorageMap<u8, Array<felt252>>,
-    }
+    use src::logic::program::{ProgramTrait, ProgramTraitImpl};
 
-    #[init]
-    fn init() -> Storage {
-        Storage {
-            program_counter: 0,
-            programs: StorageMap::new(),
+    impl BrainfuckVMImpl of super::IBrainfuckVM<ContractState> {
+        fn deploy(ref self: ContractState, mut programData: Array<felt252>) -> u128 {
+            match programData.pop_front() {
+                Option::Some(programPart) => {
+                    let partId = programData.len();
+                    let programId = self.deploy(programData);
+                    self.prog.write((programId, partId), programPart);
+                    programId
+                },
+                Option::None => {
+                    let programId = self.prog_len.read();
+                    self.prog_len.write(programId + 1);
+                    programId
+                }
+            }
+        }
+
+        fn get_program(self: @ContractState, programId: u128) -> Array<felt252> {
+            self.read_program(programId, 0)
+        }
+
+        fn call(self: @ContractState, programId: u128, inputData: Array<u8>) -> Array<u8> {
+            self.read_program(programId, 0).execute(inputData)
+        }
+
+        fn check(self: @ContractState, programId: u128, inputData: Array<u8>) {
+            self.read_program(programId, 0).check()
         }
     }
 
-    #[external]
-    fn deploy(ref mut self: Storage, program: Array<felt252>) -> u8 {
-        program.check();
-
-        let program_id = self.program_counter;
-        self.programs.insert(program_id, program);
-        self.program_counter += 1;
-
-        program_id
+    #[generate_trait]
+    impl InternalImpl of InternalTrait {
+        fn read_program(self: @ContractState, programId: u128, index: usize) -> Array<felt252> {
+            let programPart = self.prog.read((programId, index));
+            if programPart == 0 {
+                Default::default()
+            } else {
+                let mut programData = self.read_program(programId, index + 1);
+                programData.append(programPart);
+                programData
+            }
+        }
     }
 
-    #[view]
-    fn get_program(self: &Storage, program_id: u8) -> Array<felt252> {
-        self.programs.get(program_id).unwrap()
-    }
-
-    #[external]
-    fn call(self: &Storage, program_id: u8, input: Array<u8>) -> Array<u8> {
-        let program = self.get_program(program_id);
-        program.execute(program, &input)
+    #[storage]
+    struct Storage {
+        prog_len: u128,
+        prog: LegacyMap<(u128, usize), felt252>,
     }
 }
