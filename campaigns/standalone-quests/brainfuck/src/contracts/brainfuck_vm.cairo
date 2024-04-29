@@ -1,15 +1,13 @@
 #[starknet::interface]
 trait IBrainfuckVM<TContractState> {
-    fn deploy(&self, state: &TContractState, program_data: Vec<felt252>) -> u128;
-    fn get_program(&self, state: &TContractState, program_id: u128) -> Vec<felt252>;
-    fn call(&self, state: &TContractState, program_id: u128, input_data: Vec<u8>) -> Vec<u8>;
+    fn deploy(self: &TContractState, program_data: &[felt252]) -> u128;
+    fn get_program(self: &TContractState, program_id: u128) -> Vec<felt252>;
+    fn call(self: &TContractState, program_id: u128, input_data: &[u8]) -> Vec<u8>;
 }
 
 #[starknet::contract]
 mod BrainfuckVM {
-    use core::array::ArrayTrait;
     use super::IBrainfuckVM;
-    use src::logic::program::{ProgramTrait, ProgramTraitImpl};
     use std::collections::HashMap;
 
     #[storage]
@@ -32,7 +30,7 @@ mod BrainfuckVM {
     }
 
     impl IBrainfuckVM<ContractState> for ContractState {
-        fn deploy(&self, mut program_data: Vec<felt252>) -> u128 {
+        fn deploy(&self, mut program_data: &[felt252]) -> u128 {
             if let Some(program_part) = program_data.pop() {
                 let part_id = program_data.len();
                 let program_id = self.deploy(program_data);
@@ -49,7 +47,7 @@ mod BrainfuckVM {
             self.read_program(program_id, 0)
         }
 
-        fn call(&self, program_id: u128, input_data: Vec<u8>) -> Vec<u8> {
+        fn call(&self, program_id: u128, input_data: &[u8]) -> Vec<u8> {
             self.read_program(program_id, 0).execute(input_data)
         }
     }
