@@ -13,6 +13,26 @@ mod BrainfuckVM {
 
     use src::logic::program::{ProgramTrait, ProgramTraitImpl};
 
+    #[storage]
+    struct Storage {
+        prog_len: u128,
+        prog: LegacyMap<(u128, usize), felt252>,
+    }
+
+    #[generate_trait]
+    impl InternalImpl of InternalTrait {
+        fn read_program(self: @ContractState, programId: u128, index: usize) -> Array<felt252> {
+            let programPart = self.prog.read((programId, index));
+            if programPart == 0 {
+                Default::default()
+            } else {
+                let mut programData = self.read_program(programId, index + 1);
+                programData.append(programPart);
+                programData
+            }
+        }
+    }
+
     impl BrainfuckVMImpl of super::IBrainfuckVM<ContractState> {
         fn deploy(ref self: ContractState, mut programData: Array<felt252>) -> u128 {
             match programData.pop_front() {
@@ -41,25 +61,5 @@ mod BrainfuckVM {
         fn check(self: @ContractState, programId: u128, inputData: Array<u8>) {
             self.read_program(programId, 0).check()
         }
-    }
-
-    #[generate_trait]
-    impl InternalImpl of InternalTrait {
-        fn read_program(self: @ContractState, programId: u128, index: usize) -> Array<felt252> {
-            let programPart = self.prog.read((programId, index));
-            if programPart == 0 {
-                Default::default()
-            } else {
-                let mut programData = self.read_program(programId, index + 1);
-                programData.append(programPart);
-                programData
-            }
-        }
-    }
-
-    #[storage]
-    struct Storage {
-        prog_len: u128,
-        prog: LegacyMap<(u128, usize), felt252>,
     }
 }
