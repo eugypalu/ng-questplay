@@ -4,120 +4,118 @@ use bytes_31::{
     BYTES_IN_BYTES31
 };
 
-// returns next_char and updated str_length, str, next_strs
-fn iter(ref str_len: usize, ref str: felt252, ref next_strs: Span<felt252>) -> Option<felt252> {
-    // we ensure there is a string to read
-    if str_len == 0 {
-        match next_strs.pop_front() {
-            Option::Some(new_str) => {
-                str_len = 31;
-                str = *new_str;
+fn iter(ref length: usize, ref sequence: felt252, ref nextSequences: Span<felt252>) -> Option<felt252> {
+    if length == 0 {
+        match nextSequences.pop_front() {
+            Option::Some(newSequence) => {
+                length = 31;
+                sequence = *newSequence;
             },
             Option::None => {
                 return Option::None;
             },
         };
     };
-    let new_str_len = str_len - 1;
-    let (new_str, char) = split_bytes31(str, str_len, new_str_len);
-    str_len = new_str_len;
-    str = new_str;
-    Option::Some(char)
+    let newLength = length - 1;
+    let (newSequence, character) = split_bytes31(sequence, length, newLength);
+    length = newLength;
+    sequence = newSequence;
+    Option::Some(character)
 }
 
-fn preprocess(mut program: Span<felt252>) -> Array<u128> {
-    if program.len() == 0 {
+fn preprocess(mut programData: Span<felt252>) -> Array<u128> {
+    if programData.len() == 0 {
         return Default::default();
     }
-    let str_opt = program.pop_back();
-    let mut arr = preprocess(program);
+    let sequenceOption = programData.pop_back();
+    let mut array = preprocess(programData);
 
-    let u256{low, high } = match str_opt {
-        Option::Some(str) => {
-            (*str).into()
+    let u256{low, high } = match sequenceOption {
+        Option::Some(sequence) => {
+            (*sequence).into()
         },
         Option::None => {
-            return arr;
+            return array;
         }
     };
-    rec_add_chars(ref arr, 15, high);
-    rec_add_chars(ref arr, 16, low);
-    return arr;
+    rec_add_chars(ref array, 15, high);
+    rec_add_chars(ref array, 16, low);
+    return array;
 }
 
-fn rec_add_chars(ref arr: Array<u128>, str_len: felt252, str: u128) {
-    if str_len == 0 {
+fn rec_add_chars(ref array: Array<u128>, sequenceLength: felt252, sequence: u128) {
+    if sequenceLength == 0 {
         return;
     }
-    let (str, char) = DivRem::div_rem(str, 256_u128.try_into().unwrap());
-    rec_add_chars(ref arr, str_len - 1, str);
-    if char != 0 {
-        arr.append(char);
+    let (sequence, character) = DivRem::div_rem(sequence, 256_u128.try_into().unwrap());
+    rec_add_chars(ref array, sequenceLength - 1, sequence);
+    if character != 0 {
+        array.append(character);
     }
 }
 
-fn incr_ptr(ref ptr: felt252) {
-    if ptr == 255 {
-        ptr = 0
+fn incr_ptr(ref pointer: felt252) {
+    if pointer == 255 {
+        pointer = 0
     } else {
-        ptr += 1;
+        pointer += 1;
     }
 }
 
-fn decr_ptr(ref ptr: felt252) {
-    if ptr == 0 {
-        ptr = 255
+fn decr_ptr(ref pointer: felt252) {
+    if pointer == 0 {
+        pointer = 255
     } else {
-        ptr -= 1;
+        pointer -= 1;
     }
 }
 
-fn incr_mem(ref memory: Felt252Dict<u8>, ptr: felt252) {
-    let current_value = memory.get(ptr);
-    memory.insert(ptr, if current_value == 255 {
+fn incr_mem(ref memory: Felt252Dict<u8>, pointer: felt252) {
+    let currentValue = memory.get(pointer);
+    memory.insert(pointer, if currentValue == 255 {
         0
     } else {
-        current_value + 1
+        currentValue + 1
     });
 }
 
-fn decr_mem(ref memory: Felt252Dict<u8>, ptr: felt252) {
-    let current_value = memory.get(ptr);
-    memory.insert(ptr, if current_value == 0 {
+fn decr_mem(ref memory: Felt252Dict<u8>, pointer: felt252) {
+    let currentValue = memory.get(pointer);
+    memory.insert(pointer, if currentValue == 0 {
         255
     } else {
-        current_value - 1
+        currentValue - 1
     });
 }
 
-fn match_closing(ref pc: usize, instructions: @Array<u128>) {
-    let mut count = 0;
+fn match_closing(ref counter: usize, instructions: @Array<u128>) {
+    let mut balance = 0;
     loop {
-        pc += 1;
-        let c = *instructions.at(pc);
-        if c == ']' {
-            if count == 0 {
+        counter += 1;
+        let instruction = *instructions.at(counter);
+        if instruction == ']' {
+            if balance == 0 {
                 break;
             };
-            count -= 1;
-        } else if c == '[' {
-            count += 1;
+            balance -= 1;
+        } else if instruction == '[' {
+            balance += 1;
         };
     };
 }
 
-fn match_opening(ref pc: usize, instructions: @Array<u128>) {
-    let mut count = 0;
+fn match_opening(ref counter: usize, instructions: @Array<u128>) {
+    let mut balance = 0;
     loop {
-        pc -= 1;
-        let c = *instructions.at(pc);
-        if c == '[' {
-            if count == 0 {
+        counter -= 1;
+        let instruction = *instructions.at(counter);
+        if instruction == '[' {
+            if balance == 0 {
                 break;
             };
-            count -= 1;
-        } else if c == ']' {
-            count += 1;
+            balance -= 1;
+        } else if instruction == ']' {
+            balance += 1;
         };
     };
 }
