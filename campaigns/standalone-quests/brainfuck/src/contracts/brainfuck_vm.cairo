@@ -1,3 +1,5 @@
+import program
+
 #[starknet::interface]
 trait IBrainfuckVM<TContractState> {
     fn deploy(ref self: TContractState, program: Array<felt252>) -> u8;
@@ -25,7 +27,7 @@ mod BrainfuckVM {
 
     #[external]
     fn deploy(ref mut self: Storage, program: Array<felt252>) -> u8 {
-        // TODO: Add syntax validation for the program here.
+        program.check();
 
         let program_id = self.program_counter;
         self.programs.insert(program_id, program);
@@ -41,8 +43,7 @@ mod BrainfuckVM {
 
     #[external]
     fn call(self: &Storage, program_id: u8, input: Array<u8>) -> Array<u8> {
-        // TODO: Add code to execute the program here.
-
-        Array::new() // Placeholder return value.
+        let program = self.get_program(program_id);
+        program.execute(program, &input)
     }
 }
