@@ -18,31 +18,47 @@ impl ProgramTraitImpl of ProgramTrait {
         let (mut len, mut str, mut strs) = (0, 0, self.span());
 
         loop {
-            match iter(ref len, ref str, ref strs) {
-                Option::Some(char) => {
-                    if char == '[' {
-                        balance += 1;
-                        continue;
-                    }
-                    if char == ']' {
-                        assert(balance != 0, 'excess closing bracket');
-                        balance -= 1;
-                        continue;
-                    }
-                    if char
-                        * (char - '+')
-                        * (char - '>')
-                        * (char - '<')
-                        * (char - '-')
-                        * (char - '.')
-                        * (char - ',') != 0 {
-                        panic_with_felt252('unrecognized character');
-                    }
-                },
-                Option::None => {
-                    assert(balance == 0, 'missing closing bracket');
-                    break;
-                }
+            let maybe_char = iter(ref len, ref str, ref strs)
+            if maybe_char == 0{
+                assert balance == 0, "missing closing bracket"
+                break
+            }
+
+            let char = maybe_char
+            if char == '[' {
+                balance += 1
+            }
+            if char == ']'{
+                assert balance != 0, "excess closing bracket"
+                balance -= 1
+            }
+            if char * (char - '+') * (char - '>') * (char - '<') * (char - '-') * (char - '.') * (char - ',') != 0 {
+                panic_with_felt252("unrecognized character")
+            }
+                // Option::Some(char) => {
+                //     if char == '[' {
+                //         balance += 1;
+                //         continue;
+                //     }
+                //     if char == ']' {
+                //         assert(balance != 0, 'excess closing bracket');
+                //         balance -= 1;
+                //         continue;
+                //     }
+                //     if char
+                //         * (char - '+')
+                //         * (char - '>')
+                //         * (char - '<')
+                //         * (char - '-')
+                //         * (char - '.')
+                //         * (char - ',') != 0 {
+                //         panic_with_felt252('unrecognized character');
+                //     }
+                // },
+                // Option::None => {
+                //     assert(balance == 0, 'missing closing bracket');
+                //     break;
+                // }
             };
         };
     }
