@@ -18,22 +18,22 @@ impl ProgramTraitImpl of ProgramTrait {
         let (mut len, mut str, mut strs) = (0, 0, self.span());
 
         loop {
-            let maybe_char = iter(ref len, ref str, ref strs)
+            let maybe_char = iter(ref len, ref str, ref strs);
             if maybe_char == 0{
-                assert balance == 0, "missing closing bracket"
-                break
+                assert balance == 0, "missing closing bracket";
+                break;
             }
 
-            let char = maybe_char
+            let char = maybe_char;
             if char == '[' {
-                balance += 1
+                balance += 1;
             }
             if char == ']'{
-                assert balance != 0, "excess closing bracket"
-                balance -= 1
+                assert balance != 0, "excess closing bracket";
+                balance -= 1;
             }
             if char * (char - '+') * (char - '>') * (char - '<') * (char - '-') * (char - '.') * (char - ',') != 0 {
-                panic_with_felt252("unrecognized character")
+                panic_with_felt252("unrecognized character");
             }
                 // Option::Some(char) => {
                 //     if char == '[' {
