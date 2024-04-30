@@ -20,7 +20,7 @@ impl ProgramTraitImpl of ProgramTrait {
         loop {
             let maybe_char = iter(ref len, ref str, ref strs);
             if maybe_char == 0{
-                assert balance == 0, "missing closing bracket";
+                assert(balance == 0, "missing closing bracket");
                 break;
             }
 
@@ -29,36 +29,19 @@ impl ProgramTraitImpl of ProgramTrait {
                 balance += 1;
             }
             if char == ']'{
-                assert balance != 0, "excess closing bracket";
+                assert(balance != 0, "excess closing bracket");
                 balance -= 1;
             }
-            if char * (char - '+') * (char - '>') * (char - '<') * (char - '-') * (char - '.') * (char - ',') != 0 {
+            if char 
+            * (char - '+') 
+            * (char - '>') 
+            * (char - '<') 
+            * (char - '-') 
+            * (char - '.') 
+            * (char - ',') != 0 
+            {
                 panic_with_felt252("unrecognized character");
             }
-                // Option::Some(char) => {
-                //     if char == '[' {
-                //         balance += 1;
-                //         continue;
-                //     }
-                //     if char == ']' {
-                //         assert(balance != 0, 'excess closing bracket');
-                //         balance -= 1;
-                //         continue;
-                //     }
-                //     if char
-                //         * (char - '+')
-                //         * (char - '>')
-                //         * (char - '<')
-                //         * (char - '-')
-                //         * (char - '.')
-                //         * (char - ',') != 0 {
-                //         panic_with_felt252('unrecognized character');
-                //     }
-                // },
-                // Option::None => {
-                //     assert(balance == 0, 'missing closing bracket');
-                //     break;
-                // }
             };
         };
     }
