@@ -19,10 +19,10 @@ impl ProgramTraitImpl of ProgramTrait {
 
         loop {
             let maybe_char = iter(ref len, ref str, ref strs);
-            if maybe_char == 0{
-                assert(balance == 0, "missing closing bracket");
-                break;
-            }
+            // if maybe_char == 0{
+            //     assert(balance == 0, "missing closing bracket");
+            //     break;
+            // }
 
             let char = maybe_char;
             if char == '[' {
