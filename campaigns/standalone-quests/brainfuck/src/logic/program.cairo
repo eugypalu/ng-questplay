@@ -42,7 +42,6 @@ impl ProgramTraitImpl of ProgramTrait {
             {
                 panic_with_felt252("unrecognized character");
             }
-            };
         };
     }
 
