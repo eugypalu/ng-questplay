@@ -122,6 +122,8 @@ impl ProgramTraitImpl of ProgramTrait {
 
             programCounter += 1;
         };
+
         outputData
     }
+
 }
