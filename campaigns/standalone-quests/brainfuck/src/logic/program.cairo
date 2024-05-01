@@ -89,7 +89,7 @@ impl ProgramTraitImpl of ProgramTrait {
                 });
             } else if currentInstruction == '-' {
                 let currentValue = dataMemory.get(dataPointer);
-                dataMemory insert(dataPointer, if currentValue == 0 {
+                dataMemory.insert(dataPointer, if currentValue == 0 {
                     255
                 } else {
                     currentValue - 1
