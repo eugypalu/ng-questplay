@@ -61,8 +61,9 @@ impl ProgramTraitImpl of ProgramTrait {
         let mut programCounter: usize = 0;
 
         while programCounter < processedInstructions.len() {
-            if let Some(instruction) = processedInstructions.get(programCounter) {
-                let currentInstruction = *instruction.unbox();
+            // Check if we get a valid instruction
+            if let Some(instruction_boxed) = processedInstructions.get(programCounter) {
+                let currentInstruction = *instruction_boxed.unbox();
 
                 if currentInstruction == '>' {
                     if dataPointer == 255 {
@@ -119,11 +120,11 @@ impl ProgramTraitImpl of ProgramTrait {
             } else {
                 break;
             }
+
             programCounter += 1;
-        }
+        };
 
         outputData
     }
-
 
 }
