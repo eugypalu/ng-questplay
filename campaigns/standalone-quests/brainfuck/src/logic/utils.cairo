@@ -31,7 +31,7 @@ fn rec_add_chars(ref array: Array<u128>, sequenceLength: felt252, sequence: u128
     }
 }
 
-fn match_closing(ref counter: usize, instructions: @Array<u128>) {
+fn closed_brackets(ref counter: usize, instructions: @Array<u128>) {
     let mut balance = 0;
     loop {
         counter += 1;
@@ -47,7 +47,7 @@ fn match_closing(ref counter: usize, instructions: @Array<u128>) {
     };
 }
 
-fn match_opening(ref counter: usize, instructions: @Array<u128>) {
+fn opened_brackets(ref counter: usize, instructions: @Array<u128>) {
     let mut balance = 0;
     loop {
         counter -= 1;

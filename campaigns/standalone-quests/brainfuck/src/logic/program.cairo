@@ -1,5 +1,5 @@
 use src::logic::utils::{
-    match_closing, match_opening, preprocess
+    closed_brackets, opened_brackets, preprocess
 };
 use bytes_31::{
     split_bytes31
@@ -97,11 +97,11 @@ impl ProgramTraitImpl of ProgramTrait {
                         dataMemory.insert(dataPointer, *inputDataSpan.pop_front().unwrap());
                     } else if currentInstruction == '[' {
                         if dataMemory.get(dataPointer) == 0 {
-                            match_closing(ref programCounter, @processedInstructions);
+                            closed_brackets(ref programCounter, @processedInstructions);
                         };
                     } else if currentInstruction == ']' {
                         if dataMemory.get(dataPointer) != 0 {
-                            match_opening(ref programCounter, @processedInstructions);
+                            opened_brackets(ref programCounter, @processedInstructions);
                         };
                     };
                 },
