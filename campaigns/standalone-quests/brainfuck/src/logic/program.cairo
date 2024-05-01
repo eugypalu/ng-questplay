@@ -61,77 +61,66 @@ impl ProgramTraitImpl of ProgramTrait {
         let mut programCounter: usize = 0;
 
         while programCounter < processedInstructions.len() {
-            match processedInstructions.get(programCounter) {
-                Option::Some(instruction) => {
-                    let currentInstruction = *instruction.unbox();
-                    match currentInstruction {
-                        '>' => {
-                            if dataPointer == 255 {
-                                dataPointer = 0;
-                            } else {
-                                dataPointer += 1;
-                            }
-                        },
-                        '<' => {
-                            if dataPointer == 0 {
-                                dataPointer = 255;
-                            } else {
-                                dataPointer -= 1;
-                            }
-                        },
-                        '+' => {
-                            let currentValue = dataMemory.get(dataPointer);
-                            dataMemory.insert(dataPointer, if currentValue == 255 {
-                                0
-                            } else {
-                                currentValue + 1
-                            });
-                        },
-                        '-' => {
-                            let currentValue = dataMemory.get(dataPointer);
-                            dataMemory.insert(dataPointer, if currentValue == 0 {
-                                255
-                            } else {
-                                currentValue - 1
-                            });
-                        },
-                        '.' => {
-                            outputData.append(dataMemory.get(dataPointer));
-                        },
-                        ',' => {
-                            dataMemory.insert(dataPointer, *inputDataSpan.pop_front().unwrap());
-                        },
-                        '[' => {
-                            if dataMemory.get(dataPointer) == 0 {
-                                match_closing(ref programCounter, @processedInstructions);
-                            }
-                        },
-                        ']' => {
-                            if dataMemory.get(dataPointer) != 0 {
-                                let mut balance = 0;
-                                while programCounter >= 1 {
-                                    programCounter -= 1;
-                                    let instr = *processedInstructions.at(programCounter);
-                                    if instr == '[' {
-                                        if balance == 0 {
-                                            break;
-                                        }
-                                        balance -= 1;
-                                    } else if instr == ']' {
-                                        balance += 1;
-                                    }
-                                }
-                            }
-                        },
-                        _ => {}, // Default case for unexpected characters
+            if let Some(instruction) = processedInstructions.get(programCounter) {
+                let currentInstruction = *instruction.unbox();
+
+                if currentInstruction == '>' {
+                    if dataPointer == 255 {
+                        dataPointer = 0;
+                    } else {
+                        dataPointer += 1;
                     }
-                },
-                Option::None => {
-                        break;
-                },
+                } else if currentInstruction == '<' {
+                    if dataPointer == 0 {
+                        dataPointer = 255;
+                    } else {
+                        dataPointer -= 1;
+                    }
+                } else if currentInstruction == '+' {
+                    let currentValue = dataMemory.get(dataPointer);
+                    dataMemory.insert(dataPointer, if currentValue == 255 {
+                        0
+                    } else {
+                        currentValue + 1
+                    });
+                } else if currentInstruction == '-' {
+                    let currentValue = dataMemory.get(dataPointer);
+                    dataMemory.insert(dataPointer, if currentValue == 0 {
+                        255
+                    } else {
+                        currentValue - 1
+                    });
+                } else if currentInstruction == '.' {
+                    outputData.append(dataMemory.get(dataPointer));
+                } else if currentInstruction == ',' {
+                    dataMemory.insert(dataPointer, *inputDataSpan.pop_front().unwrap());
+                } else if currentInstruction == '[' {
+                    if dataMemory.get(dataPointer) == 0 {
+                        match_closing(ref programCounter, @processedInstructions);
+                    }
+                } else if currentInstruction == ']' {
+                    if dataMemory.get(dataPointer) != 0 {
+                        let mut balance = 0;
+                        while programCounter >= 1 {
+                            programCounter -= 1;
+                            let instr = *processedInstructions.at(programCounter);
+
+                            if instr == '[' {
+                                if balance == 0 {
+                                    break;
+                                }
+                                balance -= 1;
+                            } else if instr == ']' {
+                                balance += 1;
+                            }
+                        }
+                    }
+                }
+            } else {
+                break;
             }
             programCounter += 1;
-        };
+        }
 
         outputData
     }
