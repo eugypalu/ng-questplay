@@ -36,9 +36,9 @@ mod BrainfuckVM {
         fn deploy(ref self: ContractState, mut programData: Array<felt252>) -> u128 {
             match programData.pop_front() {
                 Option::Some(programPart) => {
-                    let partId = programData.len();
+                    let dataLen = programData.len();
                     let programId = self.deploy(programData);
-                    self.prog.write((programId, partId), programPart);
+                    self.prog.write((programId, dataLen), programPart);
                     programId
                 },
                 Option::None => {
