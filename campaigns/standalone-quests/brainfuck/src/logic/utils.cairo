@@ -1,27 +1,4 @@
-use traits::{TryInto, DivRem};
-use bytes_31::{
-    split_bytes31, bytes31_try_from_felt252, BYTES_IN_U128, POW_2_8, one_shift_left_bytes_u128,
-    BYTES_IN_BYTES31
-};
-
-fn iter(ref length: usize, ref sequence: felt252, ref nextSequences: Span<felt252>) -> Option<felt252> {
-    if length == 0 {
-        match nextSequences.pop_front() {
-            Option::Some(newSequence) => {
-                length = 31;
-                sequence = *newSequence;
-            },
-            Option::None => {
-                return Option::None;
-            },
-        };
-    };
-    let newLength = length - 1;
-    let (newSequence, character) = split_bytes31(sequence, length, newLength);
-    length = newLength;
-    sequence = newSequence;
-    Option::Some(character)
-}
+use traits::{DivRem};
 
 fn preprocess(mut programData: Span<felt252>) -> Array<u128> {
     if programData.len() == 0 {
@@ -52,40 +29,6 @@ fn rec_add_chars(ref array: Array<u128>, sequenceLength: felt252, sequence: u128
     if character != 0 {
         array.append(character);
     }
-}
-
-fn incr_ptr(ref pointer: felt252) {
-    if pointer == 255 {
-        pointer = 0
-    } else {
-        pointer += 1;
-    }
-}
-
-fn decr_ptr(ref pointer: felt252) {
-    if pointer == 0 {
-        pointer = 255
-    } else {
-        pointer -= 1;
-    }
-}
-
-fn incr_mem(ref memory: Felt252Dict<u8>, pointer: felt252) {
-    let currentValue = memory.get(pointer);
-    memory.insert(pointer, if currentValue == 255 {
-        0
-    } else {
-        currentValue + 1
-    });
-}
-
-fn decr_mem(ref memory: Felt252Dict<u8>, pointer: felt252) {
-    let currentValue = memory.get(pointer);
-    memory.insert(pointer, if currentValue == 0 {
-        255
-    } else {
-        currentValue - 1
-    });
 }
 
 fn match_closing(ref counter: usize, instructions: @Array<u128>) {

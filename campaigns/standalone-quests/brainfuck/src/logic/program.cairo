@@ -1,5 +1,5 @@
 use src::logic::utils::{
-    iter, match_closing, match_opening, preprocess
+    match_closing, match_opening, preprocess
 };
 use bytes_31::{
     split_bytes31, bytes31_try_from_felt252, BYTES_IN_U128, POW_2_8, one_shift_left_bytes_u128,
