@@ -48,7 +48,7 @@ fn preprocess_and_add_chars(mut programData: Span<felt252>) -> Array<u128> {
         }
     }
 
-    let sequenceLength = 16;
+    sequenceLength = 16;
     if sequenceLength != 0 {
         let (sequence, character) = DivRem::div_rem(low, 256_u128.try_into().unwrap());
         sequenceLength -= 1;
