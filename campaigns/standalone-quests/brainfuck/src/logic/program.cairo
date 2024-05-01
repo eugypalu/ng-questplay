@@ -54,76 +54,63 @@ impl ProgramTraitImpl of ProgramTrait {
 
     fn execute(self: @Array<felt252>, input: Array<u8>) -> Array<u8> {
         let processedInstructions = preprocess(self.span());
+        let instructionCount = processedInstructions.len();
         let mut dataMemory: Felt252Dict<u8> = Default::default();
         let mut inputDataSpan = input.span();
         let mut outputData: Array<u8> = Default::default();
         let mut dataPointer: felt252 = 0;
         let mut programCounter: usize = 0;
 
-        while programCounter < processedInstructions.len() {
-            let instruction_opt = processedInstructions.get(programCounter);
-            if instruction_opt.is_none() {
-                break;
-            }
-            
-            let currentInstruction = *instruction_opt.unwrap().unbox();
-
-            if currentInstruction == '>' {
-                if dataPointer == 255 {
-                    dataPointer = 0;
-                } else {
-                    dataPointer += 1;
-                }
-            } else if currentInstruction == '<' {
-                if dataPointer == 0 {
-                    dataPointer = 255;
-                } else {
-                    dataPointer -= 1;
-                }
-            } else if currentInstruction == '+' {
-                let currentValue = dataMemory.get(dataPointer);
-                dataMemory.insert(dataPointer, if currentValue == 255 {
-                    0
-                } else {
-                    currentValue + 1
-                });
-            } else if currentInstruction == '-' {
-                let currentValue = dataMemory.get(dataPointer);
-                dataMemory.insert(dataPointer, if currentValue == 0 {
-                    255
-                } else {
-                    currentValue - 1
-                });
-            } else if currentInstruction == '.' {
-                outputData.append(dataMemory.get(dataPointer));
-            } else if currentInstruction == ',' {
-                dataMemory.insert(dataPointer, *inputDataSpan.pop_front().unwrap());
-            } else if currentInstruction == '[' {
-                if dataMemory.get(dataPointer) == 0 {
-                    match_closing(ref programCounter, @processedInstructions);
-                }
-            } else if currentInstruction == ']' {
-                if dataMemory.get(dataPointer) != 0 {
-                    let mut balance = 0;
-                    while programCounter >= 1 {
-                        programCounter -= 1;
-                        let instr = *processedInstructions.at(programCounter);
-                        if instr == '[' {
-                            if balance == 0 {
-                                break;
-                            }
-                            balance -= 1;
-                        } else if instr == ']' {
-                            balance += 1;
+        loop {
+            match processedInstructions.get(programCounter) {
+                Option::Some(instruction) => {
+                    let currentInstruction = *instruction.unbox();
+                    if currentInstruction == '>' {
+                        if dataPointer == 255 {
+                            dataPointer = 0
+                        } else {
+                            dataPointer += 1;
                         }
-                    }
+                    } else if currentInstruction == '<' {
+                        if dataPointer == 0 {
+                            dataPointer = 255
+                        } else {
+                            dataPointer -= 1;
+                        }
+                    } else if currentInstruction == '+' {
+                        let currentValue = dataMemory.get(dataPointer);
+                        dataMemory.insert(dataPointer, if currentValue == 255 {
+                            0
+                        } else {
+                            currentValue + 1
+                        });
+                    } else if currentInstruction == '-' {
+                        let currentValue = dataMemory.get(dataPointer);
+                        dataMemory.insert(dataPointer, if currentValue == 0 {
+                            255
+                        } else {
+                            currentValue - 1
+                        });
+                    } else if currentInstruction == '.' {
+                        outputData.append(dataMemory.get(dataPointer));
+                    } else if currentInstruction == ',' {
+                        dataMemory.insert(dataPointer, *inputDataSpan.pop_front().unwrap());
+                    } else if currentInstruction == '[' {
+                        if dataMemory.get(dataPointer) == 0 {
+                            match_closing(ref programCounter, @processedInstructions);
+                        };
+                    } else if currentInstruction == ']' {
+                        if dataMemory.get(dataPointer) != 0 {
+                            match_opening(ref programCounter, @processedInstructions);
+                        };
+                    };
+                },
+                Option::None => {
+                    break;
                 }
             }
-
             programCounter += 1;
         };
-
         outputData
     }
-
 }
