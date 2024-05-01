@@ -2,10 +2,8 @@ use src::logic::utils::{
     match_closing, match_opening, preprocess
 };
 use bytes_31::{
-    split_bytes31, bytes31_try_from_felt252, BYTES_IN_U128, POW_2_8, one_shift_left_bytes_u128,
-    BYTES_IN_BYTES31
+    split_bytes31
 };
-use traits::{Into, DivRem};
 
 trait ProgramTrait {
     fn check(self: @Array<felt252>);
@@ -69,29 +67,29 @@ impl ProgramTraitImpl of ProgramTrait {
                     let currentInstruction = *instruction.unbox();
                     if currentInstruction == '>' {
                         if dataPointer == 255 {
-                            dataPointer = 0
+                            dataPointer = 0;
                         } else {
                             dataPointer += 1;
                         }
                     } else if currentInstruction == '<' {
                         if dataPointer == 0 {
-                            dataPointer = 255
+                            dataPointer = 255;
                         } else {
                             dataPointer -= 1;
                         }
                     } else if currentInstruction == '+' {
                         let currentValue = dataMemory.get(dataPointer);
                         dataMemory.insert(dataPointer, if currentValue == 255 {
-                            0
+                            0;
                         } else {
-                            currentValue + 1
+                            currentValue + 1;
                         });
                     } else if currentInstruction == '-' {
                         let currentValue = dataMemory.get(dataPointer);
                         dataMemory.insert(dataPointer, if currentValue == 0 {
-                            255
+                            255;
                         } else {
-                            currentValue - 1
+                            currentValue - 1;
                         });
                     } else if currentInstruction == '.' {
                         outputData.append(dataMemory.get(dataPointer));
@@ -100,19 +98,31 @@ impl ProgramTraitImpl of ProgramTrait {
                     } else if currentInstruction == '[' {
                         if dataMemory.get(dataPointer) == 0 {
                             match_closing(ref programCounter, @processedInstructions);
-                        };
+                        }
                     } else if currentInstruction == ']' {
                         if dataMemory.get(dataPointer) != 0 {
-                            match_opening(ref programCounter, @processedInstructions);
-                        };
-                    };
+                            let mut balance = 0;
+                            loop {
+                                programCounter -= 1;
+                                let instr = *processedInstructions.at(programCounter);
+
+                                if instr == '[' {
+                                    if balance == 0 {
+                                        break;
+                                    }
+                                    balance -= 1;
+                                } else if instr == ']' {
+                                    balance += 1;
+                                }
+                            }
+                        }
+                    }
                 },
-                Option::None => {
-                    break;
-                }
+                Option::None => break,
             }
             programCounter += 1;
-        };
+        }
         outputData
     }
+
 }
