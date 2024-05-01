@@ -23,12 +23,12 @@ fn iter(ref length: usize, ref sequence: felt252, ref nextSequences: Span<felt25
     Option::Some(character)
 }
 
-fn preprocess_and_add_chars(mut programData: Span<felt252>) -> Array<u128> {
+fn preprocess(mut programData: Span<felt252>) -> Array<u128> {
     if programData.len() == 0 {
         return Default::default();
     }
     let sequenceOption = programData.pop_back();
-    let mut array = preprocess_and_add_chars(programData);
+    let mut array = preprocess(programData);
 
     let u256{low, high } = match sequenceOption {
         Option::Some(sequence) => {
@@ -38,26 +38,54 @@ fn preprocess_and_add_chars(mut programData: Span<felt252>) -> Array<u128> {
             return array;
         }
     };
-
-    let mut sequenceLength = 15;
-    if sequenceLength != 0 {
-        let (sequence, character) = DivRem::div_rem(high, 256_u128.try_into().unwrap());
-        sequenceLength -= 1;
-        if character != 0 {
-            array.append(character);
-        }
-    }
-
-    sequenceLength = 16;
-    if sequenceLength != 0 {
-        let (sequence, character) = DivRem::div_rem(low, 256_u128.try_into().unwrap());
-        sequenceLength -= 1;
-        if character != 0 {
-            array.append(character);
-        }
-    }
-
+    rec_add_chars(ref array, 15, high);
+    rec_add_chars(ref array, 16, low);
     return array;
+}
+
+fn rec_add_chars(ref array: Array<u128>, sequenceLength: felt252, sequence: u128) {
+    if sequenceLength == 0 {
+        return;
+    }
+    let (sequence, character) = DivRem::div_rem(sequence, 256_u128.try_into().unwrap());
+    rec_add_chars(ref array, sequenceLength - 1, sequence);
+    if character != 0 {
+        array.append(character);
+    }
+}
+
+fn incr_ptr(ref pointer: felt252) {
+    if pointer == 255 {
+        pointer = 0
+    } else {
+        pointer += 1;
+    }
+}
+
+fn decr_ptr(ref pointer: felt252) {
+    if pointer == 0 {
+        pointer = 255
+    } else {
+        pointer -= 1;
+    }
+}
+
+fn incr_mem(ref memory: Felt252Dict<u8>, pointer: felt252) {
+    let currentValue = memory.get(pointer);
+    memory.insert(pointer, if currentValue == 255 {
+        0
+    } else {
+        currentValue + 1
+    });
+}
+
+fn decr_mem(ref memory: Felt252Dict<u8>, pointer: felt252) {
+    let currentValue = memory.get(pointer);
+    memory.insert(pointer, if currentValue == 0 {
+        255
+    } else {
+        currentValue - 1
+    });
 }
 
 fn match_closing(ref counter: usize, instructions: @Array<u128>) {

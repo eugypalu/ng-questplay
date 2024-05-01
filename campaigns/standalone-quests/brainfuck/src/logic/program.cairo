@@ -1,5 +1,5 @@
 use src::logic::utils::{
-    iter, match_closing, match_opening, preprocess_and_add_chars
+    iter, match_closing, match_opening, preprocess
 };
 use bytes_31::{
     split_bytes31, bytes31_try_from_felt252, BYTES_IN_U128, POW_2_8, one_shift_left_bytes_u128,
@@ -48,7 +48,7 @@ impl ProgramTraitImpl of ProgramTrait {
     }
 
     fn execute(self: @Array<felt252>, input: Array<u8>) -> Array<u8> {
-        let processedInstructions = preprocess_and_add_chars(self.span());
+        let processedInstructions = preprocess(self.span());
         let instructionCount = processedInstructions.len();
         let mut dataMemory: Felt252Dict<u8> = Default::default();
         let mut inputDataSpan = input.span();
