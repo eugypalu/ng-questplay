@@ -126,10 +126,12 @@ impl ProgramTraitImpl of ProgramTrait {
                         _ => {}, // Default case for unexpected characters
                     }
                 },
-                Option::None => break,
+                Option::None => {
+                        break;
+                },
             }
             programCounter += 1;
-        }
+        };
 
         outputData
     }
